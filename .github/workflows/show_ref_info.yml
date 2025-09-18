@@ -1,0 +1,38 @@
+name: Show GitHub Ref Info
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      custom_branch:
+        description: "Optional: specify a branch"
+        required: false
+        default: "main"
+  schedule:
+    - cron: "0 5 * * *"  # Daily at 5am UTC (~Midnight EST)
+
+jobs:
+  show-ref-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print GitHub context info
+        run: |
+          echo "=== GitHub Event Info ==="
+          echo "Event:           ${{ github.event_name }}"
+          echo "Ref:             ${{ github.ref }}"
+          echo "Ref Name:        ${{ github.ref_name }}"
+          echo "SHA:             ${{ github.sha }}"
+          echo "Default Branch:  ${{ github.event.repository.default_branch }}"
+          echo "Custom Input Branch (if provided): ${{ github.event.inputs.custom_branch }}"
+          
+      - name: Checkout (based on trigger)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.custom_branch != '' && github.event.inputs.custom_branch || github.ref }}
+
+      - name: Show current branch from Git
+        run: |
+          echo "=== Git info ==="
+          git branch --show-current
+          git log --oneline -n 1
